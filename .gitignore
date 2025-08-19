@@ -1,0 +1,46 @@
+# Environment configuration
+.env
+.env.local
+.env.prod
+
+# Data directories (adjust paths as needed)
+data/
+apps/
+logs/
+genomes/
+static/
+
+# SSL certificates
+ssl/
+
+# Docker volumes
+docker-volumes/
+
+# Backup files
+*.tar.gz
+*.backup
+*.tar
+*.manifest
+
+# Logs
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+home/
+
+mcview-loadbalancer/
+
+backups/

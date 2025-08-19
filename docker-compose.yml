@@ -1,0 +1,56 @@
+services:
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "${MCVIEW_PORT:-80}:80"
+      - "${MCVIEW_SSL_PORT:-443}:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${MCVIEW_STATIC_DIR:-./static}:/static:ro
+      - ${MCVIEW_SSL_CERTS:-./ssl}:/ssl:ro
+    depends_on:
+      - shiny
+    networks:
+      - mcview-network
+    environment:
+      - NGINX_ENVSUBST_TEMPLATE_SUFFIX=.template
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  shiny:
+    build:
+      context: ./shiny-server
+      args:
+        - GITHUB_PAT=${GITHUB_PAT}
+        - MCVIEW_USER_UID=${MCVIEW_USER_UID:-1000}
+        - MCVIEW_USER_GID=${MCVIEW_USER_GID:-1000}
+    image: mcview-shiny:latest
+    restart: unless-stopped
+    # user: "${MCVIEW_USER_UID:-1000}:${MCVIEW_USER_GID:-1000}"
+    ports:
+      - "${MCVIEW_SHINY_PORT:-3838}:3838"
+    volumes:
+      - ./config/shiny-server.conf:/etc/shiny-server/shiny-server.conf:ro
+      - ${MCVIEW_APPS_DIR}:/srv/shiny-server/apps:rw
+      - ${MCVIEW_LOGS_DIR}:/var/log/shiny-server:rw
+      - ${MCVIEW_DATA_DIR}:/data:ro
+    environment:
+      - SHINY_LOG_LEVEL=${SHINY_LOG_LEVEL:-INFO}
+      - MCVIEW_USER_UID=${MCVIEW_USER_UID:-1000}
+      - MCVIEW_USER_GID=${MCVIEW_USER_GID:-1000}
+    networks:
+      - mcview-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3838"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  mcview-network:
+    driver: bridge
